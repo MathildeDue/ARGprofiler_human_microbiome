@@ -16,3 +16,8 @@ prerequisites/enaBrowserTools
 results
 backup
 .snakemake
+results_initial
+results_kma_fail
+results_kma_only_trim
+scripts
+local_reads
