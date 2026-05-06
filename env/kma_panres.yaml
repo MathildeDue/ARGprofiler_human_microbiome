@@ -1,0 +1,11 @@
+name: kma_panres
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - kma=1.4.9
+  - samtools=1.17
+  - r-base=4.4
+  - r-optparse

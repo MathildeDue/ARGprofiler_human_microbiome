@@ -1,0 +1,11 @@
+name: argextender
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - perl
+  - kma=1.4.9
+  - spades=3.15.5
+  - fqgrep

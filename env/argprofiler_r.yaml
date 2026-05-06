@@ -1,0 +1,9 @@
+name: argprofiler_r
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - r-base=4.4
+  - r-optparse

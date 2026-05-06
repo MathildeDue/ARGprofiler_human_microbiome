@@ -2,8 +2,10 @@
 time_path: /usr/bin/time
 
 # zenodo urls
-zenodo_panres_fa: "https://zenodo.org/records/10091602/files/panres_genes.fa"
-zenodo_panres_meta: "https://zenodo.org/records/10091602/files/panres_annotations.tsv"
+#zenodo_panres_fa: "https://zenodo.org/records/10091602/files/panres_genes.fa"
+#zenodo_panres_meta: "https://zenodo.org/records/10091602/files/panres_annotations.tsv"
+zenodo_panres_fa: "https://zenodo.org/records/18606078/files/panres_genes_v1.1.0.fa"
+zenodo_panres_meta: "https://zenodo.org/records/18606078/files/panres_annotations_v1.1.0.tsv"
 zenodo_motus_tar: "https://zenodo.org/records/5140350/files/db_mOTU_v3.0.1.tar.gz"
 
 # fastq-dl parameters
@@ -14,6 +16,8 @@ overlap_diff_limit: "1"
 average_qual: "20"
 length_required: "50"
 cut_tail: "--cut_tail"
+poly_g_min_len: 10
+dup_calc_accuracy: 3
 
 # kma parameters for PanRes mapping
 kma_params_panres: "-ef -1t1 -nf -vcf -sam -matrix"
@@ -24,3 +28,20 @@ kma_params_motus: "-mem_mode -ef -1t1 -apm p -oa -matrix"
 # mash parameters
 mash_k: "31"
 mash_s: "10000"
+
+# BBDuk parameters
+bbduk_adapter_ref: "./config/adapters.fa"
+bbduk_ktrim: "r"
+bbduk_k: 23
+bbduk_mink: 11
+bbduk_hdist: 1
+bbduk_qtrim: "rl"
+bbduk_trimq: 20
+bbduk_minlength: 50
+bbduk_overwrite: "t"
+bbduk_trimpolyg: 10
+
+# sourmash parameters
+sourmash_scaled: "1000"
+sourmash_k: "31"
+sourmash_abund: true
