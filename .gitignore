@@ -21,3 +21,4 @@ results_kma_fail
 results_kma_only_trim
 scripts
 local_reads
+prerequisites/db_motus/db_mOTU/db_mOTU_DB_CEN.fasta
