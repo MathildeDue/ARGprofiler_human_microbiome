@@ -7,31 +7,36 @@ rule fetch_db_panres_fa:
     threads: 1
     log:
         "prerequisites/db_panres/panres_genes.log"
-    resources: 
+    resources:
         shell_exec="sh"
     shell:
         """
-        {params.time} -v --output=prerequisites/db_panres/fetch_panres_fa.bench wget {params.zenodo_url} -P prerequisites/db_panres >> {log}
+        {params.time} -v --output=prerequisites/db_panres/fetch_panres_fa.bench \
+        wget -O {output} {params.zenodo_url} > {log} 2>&1
+
         sed -i '/^#/d' {output}
         """
 
 rule fetch_db_panres_meta:
     output:
-        glengths = "prerequisites/db_panres/panres_lengths.tsv"
+        glengths="prerequisites/db_panres/panres_lengths.tsv"
     params:
         time=config["time_path"],
         zenodo_url=config["zenodo_panres_meta"],
-        meta = "prerequisites/db_panres/panres_annotations.tsv",
+        meta="prerequisites/db_panres/panres_annotations.tsv"
     threads: 1
     log:
         "prerequisites/db_panres/panres_meta.log"
     shell:
         """
-        {params.time} -v --output=prerequisites/db_panres/fetch_panres_meta.bench wget {params.zenodo_url} -P prerequisites/db_panres > {log}
-        grep 'gene_length' {params.meta} | cut -f1,3 >> {output.glengths}
+        {params.time} -v --output=prerequisites/db_panres/fetch_panres_meta.bench \
+        wget -O {params.meta} {params.zenodo_url} > {log} 2>&1
+
+        awk -F '\t' '$3=="gene_length" && $4 ~ /^[0-9]+$/ {{print $2 "\t" $4}}' {params.meta} > {output.glengths}
+
         rm {params.meta}
         """
-        
+
 rule index_db_panres:
     input:
         "prerequisites/db_panres/panres_genes.fa"
@@ -40,7 +45,7 @@ rule index_db_panres:
     envmodules:
         "tools",
         "kma/1.4.12a"
-    conda: "../env/environment_argprofiler.yaml"
+    conda: "../env/kma.yaml"
     params:
         time=config["time_path"]
     threads: 1
@@ -48,10 +53,11 @@ rule index_db_panres:
         "prerequisites/db_panres/panres_index.log"
     shell:
         """
-        {params.time} -v --output=index_panres.bench kma index -i {input} -o prerequisites/db_panres/panres 2> {log}
+        {params.time} -v --output=prerequisites/db_panres/index_panres.bench \
+        kma index -i {input} -o prerequisites/db_panres/panres 2> {log}
         touch {output.check_file_index}
         """
-
+        
 rule fetch_db_mOTUs:
     output:
         "prerequisites/db_motus/db_mOTU_v3.0.1.tar.gz"
@@ -75,7 +81,7 @@ rule index_db_mOTUs:
         "tools",
         "kma/1.4.12a"
     conda: 
-        "../env/environment_argprofiler.yaml"
+        "../env/kma.yaml"
     params:
         time=config["time_path"],
     threads: 20
