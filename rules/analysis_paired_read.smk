@@ -85,10 +85,10 @@ rule trim_paired_end_reads_bbduk:
         in1=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_1.fastq.gz"),
         in2=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_2.fastq.gz")
     output:
-        out1="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
-        out2="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
-        singleton="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq",
-        check_file_trim="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt"
+        out1="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
+        out2="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
+        singleton="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq",
+        check_file_trim="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt"
     params:
         ref=config["bbduk_adapter_ref"],
         ktrim=config["bbduk_ktrim"],
@@ -108,12 +108,12 @@ rule trim_paired_end_reads_bbduk:
         "../env/bbduk.yaml"
     threads: 10
     log:
-        "results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}.log"
+        "results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/trimmed_reads/paired_end/{wildcards.paired_reads}
+        mkdir -p results/trimmed_reads_bbduk/paired_end/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/trimmed_reads/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/trimmed_reads_bbduk/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         bbduk.sh \
             in1={input.in1} in2={input.in2} \
             out1={output.out1} out2={output.out2} \
@@ -128,19 +128,19 @@ rule trim_paired_end_reads_bbduk:
         touch {output.check_file_trim}
         """
 
-rule fastp_dup_eval_before_bbduk_paired_end_reads:
+rule fastp_dup_eval_after_bbduk_before_dedup_paired_end_reads:
     """
     Evaluate duplication on BBDuk-trimmed paired-end reads before deduplication
     """
     input:
-        in1="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
-        in2="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"
+        in1="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
+        in2="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"
     output:
-        out1=temp("results/fastp_dup_eval/before/{paired_reads}/{paired_reads}_1.eval.fastq"),
-        out2=temp("results/fastp_dup_eval/before/{paired_reads}/{paired_reads}_2.eval.fastq"),
-        html="results/fastp_dup_eval/before/{paired_reads}/{paired_reads}.html",
-        json="results/fastp_dup_eval/before/{paired_reads}/{paired_reads}.json",
-        check="results/fastp_dup_eval/before/{paired_reads}/{paired_reads}_check.txt"
+        out1=temp("results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}_1.eval.fastq"),
+        out2=temp("results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}_2.eval.fastq"),
+        html="results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}.html",
+        json="results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}.json",
+        check="results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}_check.txt"
     params:
         dup_calc_accuracy=config["dup_calc_accuracy"],
         time=config["time_path"]
@@ -151,12 +151,12 @@ rule fastp_dup_eval_before_bbduk_paired_end_reads:
         "../env/qc.yaml"
     threads: 8
     log:
-        "results/fastp_dup_eval/before/{paired_reads}/{paired_reads}.log"
+        "results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/fastp_dup_eval/before/{wildcards.paired_reads}
+        mkdir -p results/fastp_dup_eval/before_bbduk/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/fastp_dup_eval/before/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/fastp_dup_eval/before_bbduk/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         fastp \
             -i {input.in1} -I {input.in2} \
             -o {output.out1} -O {output.out2} \
@@ -221,16 +221,16 @@ rule fastp_dedup_bbduk_paired_end_reads:
     without further trimming/filtering
     """
     input:
-        in1=ancient("results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq"),
-        in2=ancient("results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"),
-        singleton=ancient("results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq")
+        in1=ancient("results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq"),
+        in2=ancient("results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"),
+        singleton=ancient("results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq")
     output:
-        out1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-        out2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-        singleton="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
-        html="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}.html",
-        json="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}.json",
-        check="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_check.txt"
+        out1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+        out2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+        singleton="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
+        html="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.html",
+        json="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.json",
+        check="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check.txt"
     params:
         dup_calc_accuracy=config["dup_calc_accuracy"],
         time=config["time_path"]
@@ -241,13 +241,13 @@ rule fastp_dedup_bbduk_paired_end_reads:
         "../env/qc.yaml"
     threads: 8
     log:
-        "results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}.log"
+        "results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/dedup_fastp/paired_end/{wildcards.paired_reads}
+        mkdir -p results/trimmed_dedup/paired_end/{wildcards.paired_reads}
 
         # Deduplicate paired-end reads
-        {params.time} -v --output=results/dedup_fastp/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/trimmed_dedup/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         fastp \
             -i {input.in1} -I {input.in2} \
             -o {output.out1} -O {output.out2} \
@@ -280,14 +280,14 @@ rule fastp_dup_eval_after_dedup_paired_end_reads:
     Evaluate duplication on fastp-deduplicated paired-end reads
     """
     input:
-        in1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-        in2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq"
+        in1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+        in2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq"
     output:
-        out1=temp("results/fastp_dup_eval/after/{paired_reads}/{paired_reads}_1.eval.fastq"),
-        out2=temp("results/fastp_dup_eval/after/{paired_reads}/{paired_reads}_2.eval.fastq"),
-        html="results/fastp_dup_eval/after/{paired_reads}/{paired_reads}.html",
-        json="results/fastp_dup_eval/after/{paired_reads}/{paired_reads}.json",
-        check="results/fastp_dup_eval/after/{paired_reads}/{paired_reads}_check.txt"
+        out1=temp("results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}_1.eval.fastq"),
+        out2=temp("results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}_2.eval.fastq"),
+        html="results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}.html",
+        json="results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}.json",
+        check="results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}_check.txt"
     params:
         dup_calc_accuracy=config["dup_calc_accuracy"],
         time=config["time_path"]
@@ -298,12 +298,12 @@ rule fastp_dup_eval_after_dedup_paired_end_reads:
         "../env/qc.yaml"
     threads: 8
     log:
-        "results/fastp_dup_eval/after/{paired_reads}/{paired_reads}.log"
+        "results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/fastp_dup_eval/after/{wildcards.paired_reads}
+        mkdir -p results/fastp_dup_eval/after_dedup/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/fastp_dup_eval/after/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/fastp_dup_eval/after_dedup/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         fastp \
             -i {input.in1} -I {input.in2} \
             -o {output.out1} -O {output.out2} \
@@ -318,7 +318,7 @@ rule fastp_dup_eval_after_dedup_paired_end_reads:
         touch {output.check}
         """
 
-rule fastp_dup_eval_after_fastp_trim_paired_end_reads:
+rule fastp_dup_eval_after_fastp_before_dedup_paired_end_reads:
     """
     Evaluate duplication on fastp trim paired-end reads
     """
@@ -326,11 +326,11 @@ rule fastp_dup_eval_after_fastp_trim_paired_end_reads:
         in1="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
         in2="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"
     output:
-        out1=temp("results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}_1.eval.fastq"),
-        out2=temp("results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}_2.eval.fastq"),
-        html="results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}.html",
-        json="results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}.json",
-        check="results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}_check.txt"
+        out1=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_1.eval.fastq"),
+        out2=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_2.eval.fastq"),
+        html="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.html",
+        json="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.json",
+        check="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt"
     params:
         dup_calc_accuracy=config["dup_calc_accuracy"],
         time=config["time_path"]
@@ -341,12 +341,12 @@ rule fastp_dup_eval_after_fastp_trim_paired_end_reads:
         "../env/qc.yaml"
     threads: 8
     log:
-        "results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}.log"
+        "results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/fastp_dup_eval/after_fastp/{wildcards.paired_reads}
+        mkdir -p results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/fastp_dup_eval/after_fastp/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         fastp \
             -i {input.in1} -I {input.in2} \
             -o {output.out1} -O {output.out2} \
@@ -432,32 +432,32 @@ rule fastqc_dedup_bbduk_paired_end_reads:
     Run FastQC on BBDuk-trimmed + fastp-deduplicated paired-end reads
     """
     input:
-        read_1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-        read_2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-        read_3="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"
+        read_1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+        read_2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+        read_3="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"
     output:
-        html_1="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_1.dedup_fastqc.html",
-        zip_1="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_1.dedup_fastqc.zip",
-        html_2="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_2.dedup_fastqc.html",
-        zip_2="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_2.dedup_fastqc.zip",
-        html_3="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.dedup_fastqc.html",
-        zip_3="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.dedup_fastqc.zip",
-        check_file_fastqc="results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt"
+        html_1="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup_fastqc.html",
+        zip_1="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup_fastqc.zip",
+        html_2="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup_fastqc.html",
+        zip_2="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup_fastqc.zip",
+        html_3="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup_fastqc.html",
+        zip_3="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup_fastqc.zip",
+        check_file_fastqc="results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt"
     envmodules:
         "tools",
         "fastqc"
     conda:
         "../env/qc.yaml"
     params:
-        outdir="results/fastqc/dedup_bbduk/paired_end/{paired_reads}",
+        outdir="results/fastqc/trimmed_dedup/paired_end/{paired_reads}",
         time=config["time_path"]
     threads: 4
     log:
-        "results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}.log"
+        "results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.log"
     shell:
         """
         mkdir -p {params.outdir}
-        {params.time} -v --output=results/fastqc/dedup_bbduk/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/fastqc/trimmed_dedup/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         fastqc -t {threads} -o {params.outdir} {input.read_1} {input.read_2} {input.read_3} > {log} 2>&1
         touch {output.check_file_fastqc}
         """
@@ -467,9 +467,9 @@ rule kma_paired_end_reads_mOTUs:
     Mapping deduplicated paired reads for identifying AMR using KMA with mOTUs db
     """
     input:
-        read_1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-        read_2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-        read_3="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
+        read_1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+        read_2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+        read_3="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
         check_file_db_mOTUs="prerequisites/db_motus/check_file_index_db_mOTUs.txt"
     output:
         "results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}.res",
@@ -505,9 +505,9 @@ rule kma_paired_end_reads_panRes:
 	Mapping raw paired reads for identifying AMR using KMA with panres db
 	"""
 	input: 
-		read_1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-		read_2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-		read_3="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
+		read_1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+		read_2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+		read_3="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
 		check_file_db_panres="prerequisites/db_panres/check_file_index_db_panres.txt"
 	output:
 		"results/kma_panres/paired_end/{paired_reads}/{paired_reads}.res",
@@ -556,9 +556,9 @@ rule mash_sketch_paired_end_reads:
 	Creation of mash sketches of paired end reads using mash
 	"""
 	input:
-		read_1=ancient("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq"),
-		read_2=ancient("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq"),
-		read_3=ancient("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"),
+		read_1=ancient("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq"),
+		read_2=ancient("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq"),
+		read_3=ancient("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"),
 	output:
 		out="results/mash_sketch/paired_end/{paired_reads}/{paired_reads}.dedup.fastq.msh",
 		check_file_mash="results/mash_sketch/paired_end/{paired_reads}/{paired_reads}_check_file_mash.txt"
@@ -647,16 +647,16 @@ rule sourmash_sketch_dedup_paired_end_reads:
 	Create per-sample sourmash signatures from paired end deduplicated reads
 	"""
 	input:
-		read_1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-		read_2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-		read_3="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"
+		read_1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+		read_2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+		read_3="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq"
 	output:
-		out="results/sourmash/paired_end/{paired_reads}/{paired_reads}.sig",
-		check_file_sourmash="results/sourmash/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt"
+		out="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.sig",
+		check_file_sourmash="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt"
 	params:
-		tmp1="results/sourmash/paired_end/{paired_reads}/{paired_reads}_r1.sig",
-		tmp2="results/sourmash/paired_end/{paired_reads}/{paired_reads}_r2.sig",
-		tmp3="results/sourmash/paired_end/{paired_reads}/{paired_reads}_singleton.sig",
+		tmp1="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_r1.sig",
+		tmp2="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_r2.sig",
+		tmp3="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.sig",
 		scaled=1000,
 		k=31,
 		time=config["time_path"]
@@ -666,11 +666,11 @@ rule sourmash_sketch_dedup_paired_end_reads:
 	conda: "../env/sourmash.yaml"
 	threads: 20
 	log:
-		"results/sourmash/paired_end/{paired_reads}/{paired_reads}.log"
+		"results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.log"
 	shell:
 		"""
-		mkdir -p results/sourmash/paired_end/{wildcards.paired_reads}
-		{params.time} -v --output=results/sourmash/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+		mkdir -p results/sourmash/trimmed_dedup/paired_end/{wildcards.paired_reads}
+		{params.time} -v --output=results/sourmash/trimmed_dedup/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
 		sourmash sketch dna -p scaled={params.scaled},k={params.k},abund -o {params.tmp1} {input.read_1} > {log} 2>&1
 		sourmash sketch dna -p scaled={params.scaled},k={params.k},abund -o {params.tmp2} {input.read_2} >> {log} 2>&1
 		sourmash sketch dna -p scaled={params.scaled},k={params.k},abund -o {params.tmp3} {input.read_3} >> {log} 2>&1
@@ -685,12 +685,12 @@ rule sourmash_compare_dedup_paired_end_reads:
 	"""
 	input:
 		lambda wildcards: expand(
-			"results/sourmash/paired_end/{paired_reads}/{paired_reads}.sig",
+			"results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.sig",
 			paired_reads=paired
 		)
 	output:
-		matrix="results/sourmash/paired_end/sourmash_matrix.npy",
-		csv="results/sourmash/paired_end/sourmash_distances.csv"
+		matrix="results/sourmash/trimmed_dedup/paired_end/sourmash_matrix.npy",
+		csv="results/sourmash/trimmed_dedup/paired_end/sourmash_distances.csv"
 	params:
 		time=config["time_path"]
 	envmodules:
@@ -699,10 +699,10 @@ rule sourmash_compare_dedup_paired_end_reads:
 	conda: "../env/sourmash.yaml"
 	threads: 20
 	log:
-		"results/sourmash/paired_end/sourmash_compare.log"
+		"results/sourmash/trimmed_dedup/paired_end/sourmash_compare.log"
 	shell:
 		"""
-		{params.time} -v --output=results/sourmash/paired_end/sourmash_compare.bench \
+		{params.time} -v --output=results/sourmash/trimmed_dedup/paired_end/sourmash_compare.bench \
 		sourmash compare {input} -o {output.matrix} --csv {output.csv} > {log} 2>&1
 		"""
 
@@ -711,16 +711,16 @@ rule sourmash_sketch_trimmed_paired_end_reads:
     Create per-sample sourmash signatures from BBDuk-trimmed paired-end reads
     """
     input:
-        read_1="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
-        read_2="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
-        read_3="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq"
+        read_1="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
+        read_2="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
+        read_3="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq"
     output:
-        out="results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}.sig",
-        check_file_sourmash="results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt"
+        out="results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}.sig",
+        check_file_sourmash="results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt"
     params:
-        tmp1="results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}_r1.sig",
-        tmp2="results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}_r2.sig",
-        tmp3="results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}_singleton.sig",
+        tmp1="results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}_r1.sig",
+        tmp2="results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}_r2.sig",
+        tmp3="results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}_singleton.sig",
         scaled=1000,
         k=31,
         time=config["time_path"]
@@ -730,12 +730,12 @@ rule sourmash_sketch_trimmed_paired_end_reads:
     conda: "../env/sourmash.yaml"
     threads: 20
     log:
-        "results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}.log"
+        "results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}.log"
     shell:
         """
-        mkdir -p results/sourmash/trimmed/paired_end/{wildcards.paired_reads}
+        mkdir -p results/sourmash/trimmed_bbduk/paired_end/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/sourmash/trimmed/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+        {params.time} -v --output=results/sourmash/trimmed_bbduk/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
         sourmash sketch dna -p scaled={params.scaled},k={params.k},abund -o {params.tmp1} {input.read_1} > {log} 2>&1
 
         sourmash sketch dna -p scaled={params.scaled},k={params.k},abund -o {params.tmp2} {input.read_2} >> {log} 2>&1
@@ -754,12 +754,12 @@ rule sourmash_compare_trimmed_paired_end_reads:
     """
     input:
         lambda wildcards: expand(
-            "results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}.sig",
+            "results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}.sig",
             paired_reads=paired
         )
     output:
-        matrix="results/sourmash/trimmed/paired_end/sourmash_matrix.npy",
-        csv="results/sourmash/trimmed/paired_end/sourmash_distances.csv"
+        matrix="results/sourmash/trimmed_bbduk/paired_end/sourmash_matrix.npy",
+        csv="results/sourmash/trimmed_bbduk/paired_end/sourmash_distances.csv"
     params:
         time=config["time_path"]
     envmodules:
@@ -768,10 +768,10 @@ rule sourmash_compare_trimmed_paired_end_reads:
     conda: "../env/sourmash.yaml"
     threads: 20
     log:
-        "results/sourmash/trimmed/paired_end/sourmash_compare.log"
+        "results/sourmash/trimmed_bbduk/paired_end/sourmash_compare.log"
     shell:
         """
-        {params.time} -v --output=results/sourmash/trimmed/paired_end/sourmash_compare.bench \
+        {params.time} -v --output=results/sourmash/trimmed_bbduk/paired_end/sourmash_compare.bench \
         sourmash compare {input} -o {output.matrix} --csv {output.csv} > {log} 2>&1
         """
     
@@ -845,9 +845,9 @@ rule ARG_extender_paired_reads:
     Performing local ARG extension of paired reads using perl script
     """
     input:
-        read_1="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
-        read_2="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
-        read_3="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
+        read_1="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq",
+        read_2="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq",
+        read_3="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq",
         panres_mapstat_filtered="results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mapstat.filtered"
     output:
         out_fasta="results/ARG_extender/paired_end/{paired_reads}/{paired_reads}.fasta.gz",
@@ -856,6 +856,7 @@ rule ARG_extender_paired_reads:
         out_frag_gz="results/ARG_extender/paired_end/{paired_reads}/{paired_reads}.frag_raw.gz",
         check_file_ARG="results/ARG_extender/paired_end/{paired_reads}/{paired_reads}_check_file_ARG.txt"
     params:
+        # The number of iterations for the ARG extender. "-1" means that the extension will continue until no new contigs are found.
         ARG="25",
         temp_dir="results/ARG_extender/paired_end/{paired_reads}/{paired_reads}",
         db="prerequisites/db_panres/panres_genes.fa",
@@ -891,17 +892,17 @@ rule cleanup_paired_end_reads:
     """
     input:
         check_file_raw="results/raw_reads/paired_end/{paired_reads}/{paired_reads}_check_file_raw.txt",
-        check_file_trim="results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt",
-        check_file_dedup="results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_check.txt",
+        check_file_trim="results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt",
+        check_file_dedup="results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check.txt",
         check_file_mash="results/mash_sketch/paired_end/{paired_reads}/{paired_reads}_check_file_mash.txt",
-        check_file_sourmash_trim="results/sourmash/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt",
+        check_file_sourmash_trim="results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt",
         check_file_sourmash_raw="results/sourmash/raw/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt",
         check_file_kma_mOTUs="results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt",
         check_file_kma_panres="results/kma_panres/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt",
         check_file_ARG="results/ARG_extender/paired_end/{paired_reads}/{paired_reads}_check_file_ARG.txt"
     output:
         check_file_clean_final1="results/raw_reads/paired_end/{paired_reads}/check_clean_raw.txt",
-        check_file_clean_final2="results/trimmed_reads/paired_end/{paired_reads}/check_clean_trim.txt"
+        check_file_clean_final2="results/trimmed_reads_bbduk/paired_end/{paired_reads}/check_clean_trim.txt"
     shell:
         """
         rm -f results/raw_reads/paired_end/{wildcards.paired_reads}/*.gz
