@@ -112,7 +112,7 @@ rule all:
 
         # Raw / trim cleanup checks
         expand("results/raw_reads/paired_end/{paired_reads}/check_clean_raw.txt", paired_reads=paired),
-        expand("results/trimmed_reads/paired_end/{paired_reads}/check_clean_trim.txt", paired_reads=paired),
+        expand("results/trimmed_reads_bbduk/paired_end/{paired_reads}/check_clean_trim.txt", paired_reads=paired),
         expand("results/raw_reads/single_end/{single_reads}/check_clean_raw.txt", single_reads=single),
         expand("results/trimmed_reads/single_end/{single_reads}/check_clean_trim.txt", single_reads=single),
 
@@ -121,66 +121,66 @@ rule all:
         expand("results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
 
         # BBDuk-trimmed reads
-        expand("results/trimmed_reads/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt", paired_reads=paired),
+        expand("results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt", paired_reads=paired),
         expand("results/trimmed_reads/single_end/{single_reads}/{single_reads}_check_file_trim.txt", single_reads=single),
 
         # FastQC
         expand("results/fastqc/raw/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
-        expand("results/fastqc/dedup_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
+        expand("results/fastqc/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
 
-        # # fastp duplication evaluation BEFORE dedup
-        # expand("results/fastp_dup_eval/before/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
-        # expand("results/fastp_dup_eval/before_raw/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        # fastp duplication evaluation BEFORE dedup
+        expand("results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        expand("results/fastp_dup_eval/before_raw/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        expand("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
 
-        # # fastp deduplicated outputs
-        # expand("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq", paired_reads=paired),
-        # expand("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq", paired_reads=paired),
-        # expand("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq", paired_reads=paired),
-        # expand("results/dedup_fastp/paired_end/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        # fastp deduplicated outputs
+        expand("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq", paired_reads=paired),
+        expand("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_2.dedup.fastq", paired_reads=paired),
+        expand("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_singleton.dedup.fastq", paired_reads=paired),
+        expand("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
 
-        # # fastp duplication evaluation AFTER dedup
-        # expand("results/fastp_dup_eval/after/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
-        # expand("results/fastp_dup_eval/after_fastp/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        # fastp duplication evaluation AFTER dedup
+        expand("results/fastp_dup_eval/after_dedup/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
 
-        # # KMA mOTUs
-        # expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}.res", paired_reads=paired),
-        # expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}.mapstat", paired_reads=paired),
-        # expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt", paired_reads=paired),
+        # KMA mOTUs
+        expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}.res", paired_reads=paired),
+        expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}.mapstat", paired_reads=paired),
+        expand("results/kma_mOTUs/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt", paired_reads=paired),
 
-        # expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}.res", single_reads=single),
-        # expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}.mapstat", single_reads=single),
-        # expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}_check_file_kma.txt", single_reads=single),
+        expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}.res", single_reads=single),
+        expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}.mapstat", single_reads=single),
+        expand("results/kma_mOTUs/single_end/{single_reads}/{single_reads}_check_file_kma.txt", single_reads=single),
 
-        # # KMA panres
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.res", paired_reads=paired),
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mat.gz", paired_reads=paired),
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mapstat", paired_reads=paired),
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mapstat.filtered", paired_reads=paired),
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.bam", paired_reads=paired),
-        # expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt", paired_reads=paired),
+        # KMA panres
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.res", paired_reads=paired),
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mat.gz", paired_reads=paired),
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mapstat", paired_reads=paired),
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.mapstat.filtered", paired_reads=paired),
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}.bam", paired_reads=paired),
+        expand("results/kma_panres/paired_end/{paired_reads}/{paired_reads}_check_file_kma.txt", paired_reads=paired),
 
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}.res", single_reads=single),
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mat.gz", single_reads=single),
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mapstat", single_reads=single),
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mapstat.filtered", single_reads=single),
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}.bam", single_reads=single),
-        # expand("results/kma_panres/single_end/{single_reads}/{single_reads}_check_file_kma.txt", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}.res", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mat.gz", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mapstat", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}.mapstat.filtered", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}.bam", single_reads=single),
+        expand("results/kma_panres/single_end/{single_reads}/{single_reads}_check_file_kma.txt", single_reads=single),
 
-        # # Mash
-        # expand("results/mash_sketch/paired_end/{paired_reads}/{paired_reads}.dedup.fastq.msh", paired_reads=paired),
-        # expand("results/mash_sketch/paired_end/{paired_reads}/{paired_reads}_check_file_mash.txt", paired_reads=paired),
-        # expand("results/mash_sketch/single_end/{single_reads}/{single_reads}.trimmed.fastq.msh", single_reads=single),
-        # expand("results/mash_sketch/single_end/{single_reads}/{single_reads}_check_file_mash.txt", single_reads=single),
+        # Mash
+        expand("results/mash_sketch/paired_end/{paired_reads}/{paired_reads}.dedup.fastq.msh", paired_reads=paired),
+        expand("results/mash_sketch/paired_end/{paired_reads}/{paired_reads}_check_file_mash.txt", paired_reads=paired),
+        expand("results/mash_sketch/single_end/{single_reads}/{single_reads}.trimmed.fastq.msh", single_reads=single),
+        expand("results/mash_sketch/single_end/{single_reads}/{single_reads}_check_file_mash.txt", single_reads=single),
 
-        # "results/mash_sketch/paired_end/mash_triangle.tsv",
-        # "results/mash_sketch/paired_end/mash_dist.tsv",
-        # "results/mash_sketch/paired_end/mash_distance_matrix.tsv",
+        "results/mash_sketch/paired_end/mash_triangle.tsv",
+        "results/mash_sketch/paired_end/mash_dist.tsv",
+        "results/mash_sketch/paired_end/mash_distance_matrix.tsv",
 
         # Sourmash trimmed + deduplicated paired-end
-        expand("results/sourmash/paired_end/{paired_reads}/{paired_reads}.sig", paired_reads=paired),
-        expand("results/sourmash/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt", paired_reads=paired),
-        "results/sourmash/paired_end/sourmash_matrix.npy",
-        "results/sourmash/paired_end/sourmash_distances.csv",
+        expand("results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}.sig", paired_reads=paired),
+        expand("results/sourmash/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt", paired_reads=paired),
+        "results/sourmash/trimmed_dedup/paired_end/sourmash_matrix.npy",
+        "results/sourmash/trimmed_dedup/paired_end/sourmash_distances.csv",
 
         # Sourmash raw paired-end
         expand("results/sourmash/raw/paired_end/{paired_reads}/{paired_reads}.sig", paired_reads=paired),
@@ -188,13 +188,13 @@ rule all:
         "results/sourmash/raw/paired_end/sourmash_matrix.npy",
         "results/sourmash/raw/paired_end/sourmash_distances.csv",
 
-        # Sourmash bbduk trimmed paired-end
-        expand("results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}.sig", paired_reads=paired),
-        expand("results/sourmash/trimmed/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt", paired_reads=paired),
-        "results/sourmash/trimmed/paired_end/sourmash_matrix.npy",
-        "results/sourmash/trimmed/paired_end/sourmash_distances.csv",
+        # Sourmash BBDuk-trimmed paired-end
+        expand("results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}.sig", paired_reads=paired),
+        expand("results/sourmash/trimmed_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_sourmash.txt", paired_reads=paired),
+        "results/sourmash/trimmed_bbduk/paired_end/sourmash_matrix.npy",
+        "results/sourmash/trimmed_bbduk/paired_end/sourmash_distances.csv",
 
-        # ARG extender 
+        # ARG extender
         expand("results/ARG_extender/paired_end/{paired_reads}/{paired_reads}.fasta.gz", paired_reads=paired),
         expand("results/ARG_extender/paired_end/{paired_reads}/{paired_reads}.gfa.gz", paired_reads=paired),
         expand("results/ARG_extender/paired_end/{paired_reads}/{paired_reads}.frag.gz", paired_reads=paired),
