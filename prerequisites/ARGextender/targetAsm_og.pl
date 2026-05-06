@@ -75,50 +75,6 @@ sub checkTarget {
 	return $empty;
 }
 
-sub extractFastqById {
-	my ($idfile, $infastq, $outfastq) = @_;
-
-	my %wanted;
-	open(my $ID, "<", $idfile) or die sprintf("Filename: %s\n%s\n", $idfile, $!);
-	while (defined(my $line = <$ID>)) {
-		chomp $line;
-		next if $line eq "";
-		$wanted{$line} = 1;
-
-		my $norm = $line;
-		$norm =~ s{/[12]$}{};
-		$wanted{$norm} = 1;
-	}
-	close($ID);
-
-	open(my $IN,  "<", $infastq)  or die sprintf("Filename: %s\n%s\n", $infastq, $!);
-	open(my $OUT, ">", $outfastq) or die sprintf("Filename: %s\n%s\n", $outfastq, $!);
-
-	while (1) {
-		my $h = <$IN>;
-		last unless defined $h;
-		my $seq  = <$IN>;
-		my $plus = <$IN>;
-		my $qual = <$IN>;
-
-		die sprintf("Malformed FASTQ: %s\n", $infastq)
-			unless defined $seq && defined $plus && defined $qual;
-
-		chomp $h;
-		my ($id) = split(/\s+/, $h);
-		$id =~ s/^@//;
-		my $norm = $id;
-		$norm =~ s{/[12]$}{};
-
-		if (exists $wanted{$id} || exists $wanted{$norm}) {
-			print $OUT $h, "\n", $seq, $plus, $qual;
-		}
-	}
-
-	close($IN);
-	close($OUT);
-}
-
 sub runIteration {
 	
 	my ($output, $target, $db, $kma_out, $target_reads, $SPAdes_out, $processes, @reads) = @_;
@@ -137,25 +93,48 @@ sub runIteration {
 	# extract aligning reads
 	&runCmDie(sprintf("gunzip -c %s.frag.gz | cut -f 7 | cut -f 1 -d \" \" | sort | uniq > %s", $kma_out, $target_reads));
 	my $filename = sprintf("%s.target.reads", $output);
+	my $fqgrep_cmd = "";
+	if ($se == 1) {
+		$fqgrep_cmd = sprintf(
+			"fqgrep -N %s %s > %s.fq || true",
+			$target_reads, $reads[0], $filename
+		);
+
+	} elsif ($se == 2) {
+		$fqgrep_cmd = sprintf(
+			"awk 'NR%%4==1{split(\\\$0,a,\" \"); print a[1]\"/1\"; next} {print}' %s > %s.norm_1.fq; " .
+			"awk 'NR%%4==1{split(\\\$0,a,\" \"); print a[1]\"/2\"; next} {print}' %s > %s.norm_2.fq; " .
+			"fqgrep -N %s --paired %s.norm_1.fq %s.norm_2.fq > %s_interleaved.fq || true; " .
+			"awk '{if ((NR-1)%%8 < 4) print > \"%s_1.fq\"; else print > \"%s_2.fq\"}' %s_interleaved.fq",
+			$reads[0], $filename,
+			$reads[1], $filename,
+			$target_reads, $filename, $filename, $filename,
+			$filename, $filename, $filename
+		);
+
+	} else {
+		$fqgrep_cmd = sprintf(
+			"awk 'NR%%4==1{split(\\\$0,a,\" \"); print a[1]\"/1\"; next} {print}' %s > %s.norm_1.fq; " .
+			"awk 'NR%%4==1{split(\\\$0,a,\" \"); print a[1]\"/2\"; next} {print}' %s > %s.norm_2.fq; " .
+			"fqgrep -N %s --paired %s.norm_1.fq %s.norm_2.fq > %s_interleaved.fq || true; " .
+			"awk '{if ((NR-1)%%8 < 4) print > \"%s_1.fq\"; else print > \"%s_2.fq\"}' %s_interleaved.fq; " .
+			"fqgrep -N %s %s > %s.fq || true",
+			$reads[0], $filename,
+			$reads[1], $filename,
+			$target_reads, $filename, $filename, $filename,
+			$filename, $filename, $filename,
+			$target_reads, $reads[2], $filename
+		);
+	}
 
 	if(&checkTarget($target_reads) == 0) {
-		if($se == 1) {
-			&extractFastqById($target_reads, $reads[0], sprintf("%s.fq", $filename));
-		} elsif($se == 2) {
-			&extractFastqById($target_reads, $reads[0], sprintf("%s_1.fq", $filename));
-			&extractFastqById($target_reads, $reads[1], sprintf("%s_2.fq", $filename));
-		} else {
-			&extractFastqById($target_reads, $reads[0], sprintf("%s_1.fq", $filename));
-			&extractFastqById($target_reads, $reads[1], sprintf("%s_2.fq", $filename));
-			&extractFastqById($target_reads, $reads[2], sprintf("%s.fq", $filename));
-		}
+		&runCmDie($fqgrep_cmd);
 	} else {
 		$filename = sprintf("%s.fasta", $db);
 		open(IN, ">", $filename) or die sprintf("Filename: %s\n%s\n", $filename, $!);
 		close(IN);
 		return $filename;
 	}
-	
 	##################################
 	## SPAdes assemble target reads ##
 	##################################
@@ -163,23 +142,24 @@ sub runIteration {
 	# run SPAdes
 	#my $SPAdes_cmd = sprintf("spades.py -o %s ", $SPAdes_out);
 	#my $SPAdes_cmd = sprintf("spades.py --only-assembler -o %s ", $SPAdes_out);
-    &runCmDie(sprintf("rm -rf %s", $SPAdes_out));
 	my $SPAdes_cmd = sprintf("spades.py --only-assembler -k 21,33,55,87 -o %s -t %s ", $SPAdes_out, $processes);
 	#my $SPAdes_cmd = sprintf("spades.py --only-assembler -k 27,47,67,87,107,127 -t 39 -m 188 -o %s ", $SPAdes_out);
+
 	my $valid_files = 0;
 	$valid_files++ if(&checkTarget(sprintf("%s.fq", $filename)) == 0);
 	$valid_files += 2 if(&checkTarget(sprintf("%s%s.fq", $filename, "_1")) == 0);
+
 	if($valid_files == 1) {
-		$SPAdes_cmd .= sprintf("--sc -s %s.fq", $filename);
+		$SPAdes_cmd .= sprintf(" --sc -s %s.fq", $filename);
 	} elsif($valid_files == 2) {
-		$SPAdes_cmd .= sprintf("--meta -1 %s%s.fq -2 %s%s.fq", $filename, "_1", $filename, "_2");
+		$SPAdes_cmd .= sprintf(" --meta -1 %s%s.fq -2 %s%s.fq", $filename, "_1", $filename, "_2");
 	} elsif($valid_files == 3) {
-		$SPAdes_cmd .= sprintf("--meta -1 %s%s.fq -2 %s%s.fq -s %s.fq", $filename, "_1", $filename, "_2", $filename);
+		$SPAdes_cmd .= sprintf(" --meta -1 %s%s.fq -2 %s%s.fq -s %s.fq", $filename, "_1", $filename, "_2", $filename);
 	}
+
 	if($valid_files != 0) {
 		&runCmDie($SPAdes_cmd);
 	}
-	
 	# Get contigs with original matches
 	if(&checkTarget(sprintf("%s/scaffolds.fasta", $SPAdes_out)) == 0) {
 		&runCmDie(sprintf("kma -i %s -o %s -tmp -t_db %s -ID 50 -na -nc -a -proxi -0.7 -t %s", sprintf("%s/scaffolds.fasta", $SPAdes_out), $kma_out, $db, $processes));
