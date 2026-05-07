@@ -22,60 +22,60 @@ rule download_paired_end_reads:
 		touch {output.check_file_raw}
 		"""
 
-rule trim_paired_end_reads_fastp:
-	"""
-	Adapter trimming of raw paired end reads using fastp, including polyG trimming and deduplication
-	"""
-	input:
-		in1=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_1.fastq.gz"),
-		in2=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_2.fastq.gz")
-	output:
-		out1="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
-		out2="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
-		singleton="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq",
-		check_file_trim="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt"
-	params:
-		overlap_diff_limit=config["overlap_diff_limit"],
-		average_qual=config["average_qual"],
-		length_required=config["length_required"],
-		cut_tail=config["cut_tail"],
-		poly_g_min_len=config["poly_g_min_len"],
-		dup_calc_accuracy=config["dup_calc_accuracy"],
-		out_merge="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_merged.trimmed.fastq",
-		h="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.html",
-		j="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.json",
-		time=config["time_path"]
-	envmodules:
-		"tools",
-		"fastp/0.23.2",
-	conda: "../env/qc.yaml"
-	threads: 8
-	log:
-		"results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.log"
+# rule trim_paired_end_reads_fastp:
+# 	"""
+# 	Adapter trimming of raw paired end reads using fastp, including polyG trimming and deduplication
+# 	"""
+# 	input:
+# 		in1=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_1.fastq.gz"),
+# 		in2=ancient("results/raw_reads/paired_end/{paired_reads}/{paired_reads}_2.fastq.gz")
+# 	output:
+# 		out1="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
+# 		out2="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq",
+# 		singleton="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq",
+# 		check_file_trim="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt"
+# 	params:
+# 		overlap_diff_limit=config["overlap_diff_limit"],
+# 		average_qual=config["average_qual"],
+# 		length_required=config["length_required"],
+# 		cut_tail=config["cut_tail"],
+# 		poly_g_min_len=config["poly_g_min_len"],
+# 		dup_calc_accuracy=config["dup_calc_accuracy"],
+# 		out_merge="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_merged.trimmed.fastq",
+# 		h="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.html",
+# 		j="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.json",
+# 		time=config["time_path"]
+# 	envmodules:
+# 		"tools",
+# 		"fastp/0.23.2",
+# 	conda: "../env/qc.yaml"
+# 	threads: 8
+# 	log:
+# 		"results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}.log"
 
-	shell:
-		"""
-		mkdir -p results/trimmed_reads_fastp/paired_end/{wildcards.paired_reads}
+# 	shell:
+# 		"""
+# 		mkdir -p results/trimmed_reads_fastp/paired_end/{wildcards.paired_reads}
 
-		{params.time} -v --output=results/trimmed_reads_fastp/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
-		fastp \
-			-i {input.in1} -I {input.in2} \
-			-o {output.out1} -O {output.out2} \
-			--merge --merged_out {params.out_merge} \
-			--unpaired1 {output.singleton} --unpaired2 {output.singleton} \
-			--overlap_diff_limit {params.overlap_diff_limit} \
-			--average_qual {params.average_qual} \
-			--length_required {params.length_required} \
-			--trim_poly_g --poly_g_min_len {params.poly_g_min_len} \
-			--dedup --dup_calc_accuracy {params.dup_calc_accuracy} \
-			{params.cut_tail} \
-			-h {params.h} -j {params.j} -w {threads} \
-			2> {log}
+# 		{params.time} -v --output=results/trimmed_reads_fastp/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+# 		fastp \
+# 			-i {input.in1} -I {input.in2} \
+# 			-o {output.out1} -O {output.out2} \
+# 			--merge --merged_out {params.out_merge} \
+# 			--unpaired1 {output.singleton} --unpaired2 {output.singleton} \
+# 			--overlap_diff_limit {params.overlap_diff_limit} \
+# 			--average_qual {params.average_qual} \
+# 			--length_required {params.length_required} \
+# 			--trim_poly_g --poly_g_min_len {params.poly_g_min_len} \
+# 			--dedup --dup_calc_accuracy {params.dup_calc_accuracy} \
+# 			{params.cut_tail} \
+# 			-h {params.h} -j {params.j} -w {threads} \
+# 			2> {log}
 
-		cat {params.out_merge} >> {output.singleton} 2>> {log}
-		rm {params.out_merge}
-		touch {output.check_file_trim}
-		"""
+# 		cat {params.out_merge} >> {output.singleton} 2>> {log}
+# 		rm {params.out_merge}
+# 		touch {output.check_file_trim}
+# 		"""
 
 rule trim_paired_end_reads_bbduk:
     """
@@ -318,48 +318,48 @@ rule fastp_dup_eval_after_dedup_paired_end_reads:
         touch {output.check}
         """
 
-rule fastp_dup_eval_after_fastp_before_dedup_paired_end_reads:
-    """
-    Evaluate duplication on fastp trim paired-end reads
-    """
-    input:
-        in1="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
-        in2="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"
-    output:
-        out1=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_1.eval.fastq"),
-        out2=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_2.eval.fastq"),
-        html="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.html",
-        json="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.json",
-        check="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt"
-    params:
-        dup_calc_accuracy=config["dup_calc_accuracy"],
-        time=config["time_path"]
-    envmodules:
-        "tools",
-        "fastp/0.23.2"
-    conda:
-        "../env/qc.yaml"
-    threads: 8
-    log:
-        "results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.log"
-    shell:
-        """
-        mkdir -p results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}
+# rule fastp_dup_eval_after_fastp_before_dedup_paired_end_reads:
+#     """
+#     Evaluate duplication on fastp trim paired-end reads
+#     """
+#     input:
+#         in1="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq",
+#         in2="results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"
+#     output:
+#         out1=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_1.eval.fastq"),
+#         out2=temp("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_2.eval.fastq"),
+#         html="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.html",
+#         json="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.json",
+#         check="results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt"
+#     params:
+#         dup_calc_accuracy=config["dup_calc_accuracy"],
+#         time=config["time_path"]
+#     envmodules:
+#         "tools",
+#         "fastp/0.23.2"
+#     conda:
+#         "../env/qc.yaml"
+#     threads: 8
+#     log:
+#         "results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}.log"
+#     shell:
+#         """
+#         mkdir -p results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}
 
-        {params.time} -v --output=results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
-        fastp \
-            -i {input.in1} -I {input.in2} \
-            -o {output.out1} -O {output.out2} \
-            --disable_adapter_trimming \
-            --disable_quality_filtering \
-            --disable_length_filtering \
-            --disable_trim_poly_g \
-            --dup_calc_accuracy {params.dup_calc_accuracy} \
-            -h {output.html} -j {output.json} -w {threads} \
-            > {log} 2>&1
+#         {params.time} -v --output=results/fastp_dup_eval/before_fastp/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+#         fastp \
+#             -i {input.in1} -I {input.in2} \
+#             -o {output.out1} -O {output.out2} \
+#             --disable_adapter_trimming \
+#             --disable_quality_filtering \
+#             --disable_length_filtering \
+#             --disable_trim_poly_g \
+#             --dup_calc_accuracy {params.dup_calc_accuracy} \
+#             -h {output.html} -j {output.json} -w {threads} \
+#             > {log} 2>&1
 
-        touch {output.check}
-        """
+#         touch {output.check}
+#         """
 
 
 rule fastqc_raw_paired_end_reads:
@@ -393,39 +393,39 @@ rule fastqc_raw_paired_end_reads:
 		touch {output.check_file_fastqc}
 		"""
 
-rule fastqc_fastp_paired_end_reads:
-	"""
-	Run FastQC on fastp-trimmed paired-end reads
-	"""
-	input:
-		read_1=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq"),
-		read_2=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"),
-		read_3=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq")
-	output:
-		html_1="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed_fastqc.html",
-		zip_1="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed_fastqc.zip",
-		html_2="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed_fastqc.html",
-		zip_2="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed_fastqc.zip",
-		html_3="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed_fastqc.html",
-		zip_3="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed_fastqc.zip",
-		check_file_fastqc="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt"
-	envmodules:
-		"tools",
-		"fastqc"
-	conda: "../env/qc.yaml"
-	params:
-		outdir="results/fastqc/fastp/paired_end/{paired_reads}",
-		time=config["time_path"]
-	threads: 4
-	log:
-		"results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}.log"
-	shell:
-		"""
-		mkdir -p {params.outdir}
-		{params.time} -v --output=results/fastqc/fastp/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
-		fastqc -t {threads} -o {params.outdir} {input.read_1} {input.read_2} {input.read_3} > {log} 2>&1
-		touch {output.check_file_fastqc}
-		"""
+# rule fastqc_fastp_paired_end_reads:
+# 	"""
+# 	Run FastQC on fastp-trimmed paired-end reads
+# 	"""
+# 	input:
+# 		read_1=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed.fastq"),
+# 		read_2=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed.fastq"),
+# 		read_3=ancient("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed.fastq")
+# 	output:
+# 		html_1="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed_fastqc.html",
+# 		zip_1="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_1.trimmed_fastqc.zip",
+# 		html_2="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed_fastqc.html",
+# 		zip_2="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_2.trimmed_fastqc.zip",
+# 		html_3="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed_fastqc.html",
+# 		zip_3="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_singleton.trimmed_fastqc.zip",
+# 		check_file_fastqc="results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt"
+# 	envmodules:
+# 		"tools",
+# 		"fastqc"
+# 	conda: "../env/qc.yaml"
+# 	params:
+# 		outdir="results/fastqc/fastp/paired_end/{paired_reads}",
+# 		time=config["time_path"]
+# 	threads: 4
+# 	log:
+# 		"results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}.log"
+# 	shell:
+# 		"""
+# 		mkdir -p {params.outdir}
+# 		{params.time} -v --output=results/fastqc/fastp/paired_end/{wildcards.paired_reads}/{wildcards.paired_reads}.bench \
+# 		fastqc -t {threads} -o {params.outdir} {input.read_1} {input.read_2} {input.read_3} > {log} 2>&1
+# 		touch {output.check_file_fastqc}
+# 		"""
 
 rule fastqc_dedup_bbduk_paired_end_reads:
     """
