@@ -117,8 +117,8 @@ rule all:
         expand("results/trimmed_reads/single_end/{single_reads}/check_clean_trim.txt", single_reads=single),
 
         # Fastp-trimmed paired-end reads
-        expand("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt", paired_reads=paired),
-        expand("results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
+        # expand("results/trimmed_reads_fastp/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt", paired_reads=paired),
+        # expand("results/fastqc/fastp/paired_end/{paired_reads}/{paired_reads}_check_file_fastqc.txt", paired_reads=paired),
 
         # BBDuk-trimmed reads
         expand("results/trimmed_reads_bbduk/paired_end/{paired_reads}/{paired_reads}_check_file_trim.txt", paired_reads=paired),
@@ -131,7 +131,7 @@ rule all:
         # fastp duplication evaluation BEFORE dedup
         expand("results/fastp_dup_eval/before_bbduk/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
         expand("results/fastp_dup_eval/before_raw/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
-        expand("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
+        # expand("results/fastp_dup_eval/before_fastp/{paired_reads}/{paired_reads}_check.txt", paired_reads=paired),
 
         # fastp deduplicated outputs
         expand("results/trimmed_dedup/paired_end/{paired_reads}/{paired_reads}_1.dedup.fastq", paired_reads=paired),
